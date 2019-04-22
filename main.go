@@ -1,29 +1,38 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 )
 
-func directoryCheck(path, prefix string) {
+func directoryCheck(path string, depth int) {
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		logrus.WithError(err)
 	}
 
+	var b bytes.Buffer
+
+	for i := 0; i < depth; i++ {
+		b.WriteString("| ")
+	}
+
+	prefix := "├───"
 	count := len(files) - 1
 
 	for i, file := range files {
 		if i == count {
-			//prefix = " └" + prefix + "─"
+			prefix = "└───"
 		}
 		if file.IsDir() {
-			fmt.Println(prefix + file.Name())
-			directoryCheck(path+"/"+file.Name(), "|  "+prefix+"─")
+
+			fmt.Println(b.String() + prefix + file.Name())
+			directoryCheck(path+"/"+file.Name(), depth+1)
 		} else {
-			fmt.Println(prefix + file.Name() + " (" + fmt.Sprint(file.Size()) + "b)")
+			fmt.Println(b.String() + prefix + file.Name() + " (" + fmt.Sprint(file.Size()) + "b)")
 		}
 	}
 }
@@ -36,5 +45,5 @@ func main() {
 	}
 	fmt.Println(path)
 
-	directoryCheck(path, "├──")
+	directoryCheck(path, 0)
 }

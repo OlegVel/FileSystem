@@ -8,29 +8,39 @@ import (
 	"os"
 )
 
-func directoryCheck(path string, depth int) {
+func directoryCheck(path string, depth []bool) {
+	var b bytes.Buffer
+	var prefix string
+	var depthIn []bool
+
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		logrus.WithError(err)
 	}
 
-	var b bytes.Buffer
+	for _, depthFlag := range depth {
+		if depthFlag {
+			b.WriteString(" \t")
+		} else {
+			b.WriteString("|\t")
+		}
 
-	for i := 0; i < depth; i++ {
-		b.WriteString("| ")
 	}
 
-	prefix := "├───"
 	count := len(files) - 1
 
 	for i, file := range files {
 		if i == count {
-			prefix = "└───"
+			prefix = "└────"
+			depthIn = append(depth, true)
+		} else {
+			prefix = "├────"
+			depthIn = append(depth, false)
 		}
-		if file.IsDir() {
 
+		if file.IsDir() {
 			fmt.Println(b.String() + prefix + file.Name())
-			directoryCheck(path+"/"+file.Name(), depth+1)
+			directoryCheck(path+"/"+file.Name(), depthIn)
 		} else {
 			fmt.Println(b.String() + prefix + file.Name() + " (" + fmt.Sprint(file.Size()) + "b)")
 		}
@@ -45,5 +55,5 @@ func main() {
 	}
 	fmt.Println(path)
 
-	directoryCheck(path, 0)
+	directoryCheck(path, []bool{})
 }
